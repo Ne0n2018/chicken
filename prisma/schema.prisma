@@ -10,8 +10,7 @@ generator client {
 
 datasource db {
     provider  = "postgresql"
-    url       = env("POSTGRES_PRISMA_URL")
-    directUrl = env("POSTGRES_URL_NON_PULLING")
+    url       = env("DATABASE_URL")
 }
 
 enum Role {
@@ -21,13 +20,10 @@ enum Role {
 }
 
 enum TaskType {
-  DRAG_AND_DROP
-  CHOOSE_ONE
-  CHOOSE_MANY
-  DRAW
   COLORING
   PUZZLE
-  SOUND
+  CHOOSE_ONE
+  DRAG_AND_DROP
 }
 
 model Account {
@@ -65,18 +61,26 @@ model User {
   image         String?
   password      String?
   role          Role      @default(CHILD)
+  teacherId     String?                     // ребёнок → учитель
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // Связи
   accounts      Account[]
   sessions      Session[]
-  parent        ParentChild[] @relation("Parent")
-  children      ParentChild[] @relation("Child")
 
-  // ← Добавляем обратные поля для групп
-  groupsAsTeacher TeacherGroup[] @relation("TeacherGroups")   // группы, где пользователь — учитель
-  groupsAsChild   TeacherGroup[] @relation("ChildGroups")     // группы, где пользователь — ребёнок
+  // Родитель ↔ Ребёнок
+  parentLinks   ParentChild[] @relation("Parent")
+  childLinks    ParentChild[] @relation("Child")
+
+  // Учитель → дети (ребёнок ссылается на учителя)
+  teacher       User?         @relation("TeacherChildren", fields: [teacherId], references: [id])
+  students      User[]        @relation("TeacherChildren")
+
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+  // ДОБАВЬ ЭТУ СТРОКУ — ОБЯЗАТЕЛЬНО!
+  createdTasks  Task[]        @relation("TaskAuthor")
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
   completions   TaskCompletion[]
 }
@@ -91,33 +95,24 @@ model ParentChild {
   @@id([parentId, childId])
 }
 
-model TeacherGroup {
-  id        String   @id @default(cuid())
-  teacherId String
-  name      String
-  createdAt DateTime @default(now())
-
-  teacher   User       @relation("TeacherGroups", fields: [teacherId], references: [id], onDelete: Cascade)
-  children  User[]     @relation("ChildGroups")     // ← наше имя отношения
-  tasks     Task[]
-
-  @@map("teacher_groups")
-}
 
 model Task {
-  id           String      @id @default(cuid())
-  title        String
-  description  String?
-  type         TaskType
-  data         Json        // сюда кладём всё нужное для задания (картинки, варианты ответов и т.д.)
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  type        TaskType
+  data        Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  groupId      String?
-  group        TeacherGroup? @relation(fields: [groupId], references: [id])
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+  // Измени на такое (с именем отношения):
+  teacherId   String?
+  teacher     User?    @relation("TaskAuthor", fields: [teacherId], references: [id])
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
-  completions  TaskCompletion[]
+  completions TaskCompletion[]
 }
 
 model TaskCompletion {
