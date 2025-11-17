@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("POSTGRES_PRISMA_URL")
+    directUrl = env("POSTGRES_URL_NON_PULLING")
+}
+
+enum Role {
+  PARENT
+  TEACHER
+  CHILD
+}
+
+enum TaskType {
+  DRAG_AND_DROP
+  CHOOSE_ONE
+  CHOOSE_MANY
+  DRAW
+  COLORING
+  PUZZLE
+  SOUND
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(CHILD)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Связи
+  accounts      Account[]
+  sessions      Session[]
+  parent        ParentChild[] @relation("Parent")
+  children      ParentChild[] @relation("Child")
+
+  // ← Добавляем обратные поля для групп
+  groupsAsTeacher TeacherGroup[] @relation("TeacherGroups")   // группы, где пользователь — учитель
+  groupsAsChild   TeacherGroup[] @relation("ChildGroups")     // группы, где пользователь — ребёнок
+
+  completions   TaskCompletion[]
+}
+
+model ParentChild {
+  parentId String
+  childId  String
+
+  parent User @relation("Parent", fields: [parentId], references: [id], onDelete: Cascade)
+  child  User @relation("Child",  fields: [childId],  references: [id], onDelete: Cascade)
+
+  @@id([parentId, childId])
+}
+
+model TeacherGroup {
+  id        String   @id @default(cuid())
+  teacherId String
+  name      String
+  createdAt DateTime @default(now())
+
+  teacher   User       @relation("TeacherGroups", fields: [teacherId], references: [id], onDelete: Cascade)
+  children  User[]     @relation("ChildGroups")     // ← наше имя отношения
+  tasks     Task[]
+
+  @@map("teacher_groups")
+}
+
+model Task {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  type         TaskType
+  data         Json        // сюда кладём всё нужное для задания (картинки, варианты ответов и т.д.)
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  groupId      String?
+  group        TeacherGroup? @relation(fields: [groupId], references: [id])
+
+  completions  TaskCompletion[]
+}
+
+model TaskCompletion {
+  id         String   @id @default(cuid())
+  userId     String
+  taskId     String
+  completed  Boolean  @default(false)
+  stars      Int      @default(0) // 0-3 звёздочки
+  attempts   Int      @default(0)
+  completedAt DateTime?
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+}
+
+
