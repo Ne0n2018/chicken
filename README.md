@@ -2,6 +2,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+убери ForExamole у файла ForExample.env и заполни его поля теми данными что ты мне скинула если такового нет напиши туда 32 символа
+и в терминал введи
+
+```bash
+npm i
+```
+
 First, run the development server:
 
 ```bash
