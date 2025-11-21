@@ -72,10 +72,7 @@ export default async function TeacherDashboard() {
                   {task.title}
                 </h3>
                 <p className="text-gray-600">
-                  {task.type === "COLORING" && "Раскраска"}
-                  {task.type === "PUZZLE" && "Пазл"}
                   {task.type === "CHOOSE_ONE" && "Выбери правильный"}
-                  {task.type === "DRAG_AND_DROP" && "Перетащи на место"}
                 </p>
                 <p className="text-sm text-gray-500">
                   Создано: {new Date(task.createdAt).toLocaleDateString("ru")}

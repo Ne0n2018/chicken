@@ -9,41 +9,23 @@ type Task = {
   type: string;
 };
 
-type Completion = {
-  id: string;
-  completed: boolean;
-  stars: number | null;
+type TaskCardProps = {
+  task: Task;
+  completion: {
+    completed: boolean;
+    stars: number;
+    attempts?: number;
+  } | null;
+  childId: string;
 };
 
-export default function TaskCard({
-  task,
-  completion,
-  childId,
-}: {
-  task: Task;
-  completion: Completion;
-  childId: string;
-}) {
+export default function TaskCard({ task, completion }: TaskCardProps) {
+  const isCompleted = completion?.completed ?? false;
   const typeConfig = {
-    COLORING: {
-      emoji: "Paintbrush",
-      color: "from-pink-400 to-purple-400",
-      bg: "bg-pink-100",
-    },
-    PUZZLE: {
-      emoji: "Puzzle",
-      color: "from-blue-400 to-cyan-400",
-      bg: "bg-blue-100",
-    },
     CHOOSE_ONE: {
       emoji: "Target",
       color: "from-green-400 to-emerald-400",
       bg: "bg-green-100",
-    },
-    DRAG_AND_DROP: {
-      emoji: "Hand",
-      color: "from-orange-400 to-red-400",
-      bg: "bg-orange-100",
     },
   };
 
@@ -64,7 +46,7 @@ export default function TaskCard({
           <h3 className="text-4xl font-bold text-purple-800 mb-4">
             {task.title}
           </h3>
-          {completion.completed ? (
+          {isCompleted ? (
             <div className="text-6xl">CheckCircle</div>
           ) : (
             <Button

@@ -4,13 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 
-type TaskType = "COLORING" | "PUZZLE" | "CHOOSE_ONE" | "DRAG_AND_DROP";
-const allowedTypes: TaskType[] = [
-  "COLORING",
-  "PUZZLE",
-  "CHOOSE_ONE",
-  "DRAG_AND_DROP",
-];
+type TaskType = "CHOOSE_ONE";
+const allowedTypes: TaskType[] = ["CHOOSE_ONE"];
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);

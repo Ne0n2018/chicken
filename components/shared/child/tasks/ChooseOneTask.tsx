@@ -5,30 +5,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import confetti from "canvas-confetti";
+import { ChooseOneTask } from "@/types/task";
 
-type Task = {
-  id: string;
-  title: string;
-  data: {
-    question: string;
-    options: string[];
-    correctIndex: number;
-  };
+type Props = {
+  task: ChooseOneTask; // ← Теперь 100% правильный тип!
 };
 
-type Completion = {
-  id: string;
-};
-
-export default function ChooseOneTask({
-  task,
-  completion,
-  childId,
-}: {
-  task: Task;
-  completion: Completion;
-  childId: string;
-}) {
+export default function ChooseOneTaskClient({ task }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);

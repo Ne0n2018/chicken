@@ -1,66 +1,68 @@
 // app/child/task/[id]/page.tsx
+import { notFound } from "next/navigation";
+import ChooseOneTaskClient from "@/components/shared/child/tasks/ChooseOneTask";
+import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import ChooseOneTask from "@/components/shared/child/tasks/ChooseOneTask";
+import type { ChooseOneTask } from "@/types/task";
 
-export default async function TaskPage({
-  params,
-}: {
+type Props = {
   params: Promise<{ id: string }>;
-}) {
+};
+
+export default async function Page({ params }: Props) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "CHILD") redirect("/login");
 
-  const { id } = await params; // Next.js 15+ — params асинхронный
-  const childId = session.user.id as string;
+  if (!session || session.user.role !== "CHILD") notFound();
 
-  // Загружаем задание и прогресс ребёнка
-  const task = await prisma.task.findUnique({
+  const rawTask = await prisma.task.findUnique({
     where: { id, isActive: true },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      type: true,
+      data: true,
+      description: true,
       teacher: { select: { name: true } },
+      completions: {
+        where: { userId: session.user.id },
+        take: 1,
+      },
     },
   });
 
-  if (!task || task.type !== "CHOOSE_ONE") {
-    return <div className="text-center pt-20 text-4xl">Задание не найдено</div>;
+  if (!rawTask || rawTask.type !== "CHOOSE_ONE") notFound();
+
+  // ВАЖНО: Приводим тип + проверяем структуру
+  const taskData = rawTask.data as any;
+
+  if (
+    typeof taskData.question !== "string" ||
+    !Array.isArray(taskData.options) ||
+    typeof taskData.correctIndex !== "number" ||
+    taskData.correctIndex < 0 ||
+    taskData.correctIndex >= taskData.options.length
+  ) {
+    console.error("Некорректные данные задания:", rawTask);
+    notFound();
   }
 
-  // Создаём или получаем прогресс ребёнка
-  const completion = await prisma.taskCompletion.upsert({
-    where: {
-      userId_taskId: { userId: childId, taskId: id },
+  const task: ChooseOneTask = {
+    id: rawTask.id,
+    title: rawTask.title,
+    description: rawTask.description,
+    type: rawTask.type,
+    isActive: true,
+    teacherId: rawTask.teacher?.name ?? null,
+    teacher: rawTask.teacher,
+    data: {
+      question: taskData.question,
+      options: taskData.options,
+      correctIndex: taskData.correctIndex,
+      imageUrl: taskData.imageUrl ?? undefined,
     },
-    update: {},
-    create: {
-      userId: childId,
-      taskId: id,
-      completed: false,
-      stars: 0,
-    },
-  });
+  };
 
-  // Если уже выполнено — показываем результат
-  if (completion.completed) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-100 flex items-center justify-center p-8">
-        <div className="text-center bg-white/90 backdrop-blur rounded-3xl p-16 shadow-2xl">
-          <div className="text-9xl mb-8">Trophy</div>
-          <h1 className="text-6xl font-bold text-purple-800 mb-6">Молодец!</h1>
-          <p className="text-4xl text-green-600 mb-8">
-            Ты получил {completion.stars} звёздочек!
-          </p>
-          <a href="/child" className="text-3xl text-purple-600 underline">
-            ← Вернуться к заданиям
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <ChooseOneTask task={task} completion={completion} childId={childId} />
-  );
+  return <ChooseOneTaskClient task={task} />;
 }

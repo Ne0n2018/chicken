@@ -12,12 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import ChooseOneTaskForm from "./task-form/ChooseOneTaskForm";
-// import ColoringTaskForm from "./task-forms/ColoringTaskForm";
-// import PuzzleTaskForm from "./task-forms/PuzzleTaskForm";
 
-// import DragAndDropTaskForm from "./task-forms/DragAndDropTaskForm";
-
-type TaskType = "COLORING" | "PUZZLE" | "CHOOSE_ONE" | "DRAG_AND_DROP";
+type TaskType = "CHOOSE_ONE";
 
 const taskTemplates = [
   {

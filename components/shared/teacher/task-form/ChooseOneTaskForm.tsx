@@ -7,12 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { redirect } from "next/navigation";
 
 export default function ChooseOneTaskForm({
-  onSuccess,
   onClose,
 }: {
-  onSuccess: () => void;
   onClose: () => void;
 }) {
   const [title, setTitle] = useState("");
@@ -37,7 +36,7 @@ export default function ChooseOneTaskForm({
     });
 
     if (res.ok) {
-      onSuccess();
+      redirect("/dashboard");
     } else {
       toast.error("Ошибка создания задания");
     }

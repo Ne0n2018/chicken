@@ -1,10 +1,12 @@
+// app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
+import type { NextAuthOptions } from "next-auth"; // ← Правильный тип для v4!
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
-import { prisma } from "@/lib/prisma"; // твой Prisma клиент
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
+  // ← NextAuthOptions вместо NextAuthConfig
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -13,28 +15,16 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Введите email и пароль");
-        }
+        if (!credentials?.email || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email.toLowerCase(),
-          },
+          where: { email: credentials.email.toLowerCase() },
         });
 
-        if (!user || !user.password) {
-          throw new Error("Неверный email или пароль");
-        }
+        if (!user || !user.password) return null;
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          throw new Error("Неверный email или пароль");
-        }
+        const ok = await bcrypt.compare(credentials.password, user.password);
+        if (!ok) return null;
 
         return {
           id: user.id,
@@ -44,44 +34,29 @@ export const authOptions = {
         };
       },
     }),
-    // Google (опционально)
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
   ],
 
-  // ← Явно передаём secret из env
   secret: process.env.NEXTAUTH_SECRET,
+  session: { strategy: "jwt" },
 
-  // Session с JWT (как у тебя)
-  session: {
-    strategy: "jwt",
+  pages: {
+    signIn: "/login",
   },
 
-  // Callbacks: убедись, что они простые (без лишних модификаций токена)
   callbacks: {
-    async jwt({ token, user }) {
-      // Только если есть user (новый логин) — добавляем роль
+    jwt: async ({ token, user }) => {
       if (user) {
+        token.id = user.id;
         token.role = user.role;
       }
       return token;
     },
-    async session({ session, token }) {
-      if (token?.role) {
-        session.user.role = token.role as string;
-      }
-      if (token?.sub) {
-        session.user.id = token.sub;
-      }
+
+    session: async ({ session, token }) => {
+      if (token.id) session.user.id = token.id;
+      if (token.role) session.user.role = token.role;
       return session;
     },
-  },
-
-  pages: {
-    signIn: "/login",
-    error: "/login",
   },
 };
 
