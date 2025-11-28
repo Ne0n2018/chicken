@@ -2,6 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import {CheckCircle} from "lucide-react";
 
 type Task = {
   id: string;
@@ -37,7 +38,7 @@ export default function TaskCard({ task, completion }: TaskCardProps) {
       <Card
         className={`p-10 hover:scale-105 transition-all duration-300 cursor-pointer shadow-2xl border-4 border-white ${config.bg}`}
       >
-        <div className="text-center">
+        <div className="text-center flex items-center justify-center flex-col">
           <div
             className={`w-40 h-40 mx-auto mb-6 rounded-full bg-gradient-to-br ${config.color} flex items-center justify-center text-9xl shadow-xl`}
           >
@@ -47,7 +48,7 @@ export default function TaskCard({ task, completion }: TaskCardProps) {
             {task.title}
           </h3>
           {isCompleted ? (
-            <div className="text-6xl">CheckCircle</div>
+            <CheckCircle />
           ) : (
             <Button
               size="lg"

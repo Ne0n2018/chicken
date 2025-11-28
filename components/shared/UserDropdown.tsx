@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings } from "lucide-react";
+import {LogOut, User, Settings, Sparkles} from "lucide-react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 
@@ -80,7 +80,7 @@ export default function UserDropdown({ user }: { user: UserType }) {
               href="/child"
               className="flex items-center gap-2 cursor-pointer"
             >
-              <span className="text-2xl">Star</span>
+              <Sparkles/>
               Играть!
             </Link>
           </DropdownMenuItem>

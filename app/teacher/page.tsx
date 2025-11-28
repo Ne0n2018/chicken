@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-import { Pencil, Trash2, Users } from "lucide-react";
+import {Pencil, Scroll, Trash2, Users} from "lucide-react";
 import CreateTaskDialog from "@/components/shared/teacher/CreateTaskDialog";
 import EditTaskDialog from "@/components/shared/teacher/EditTaskDialog";
 
@@ -43,8 +43,8 @@ export default async function TeacherDashboard() {
             <Users className="w-16 h-16 mx-auto mb-4 text-purple-600" />
             <p className="text-3xl font-bold">{students.length} детей</p>
           </Card>
-          <Card className="p-8 text-center">
-            <div className="text-6xl mb-4">Scroll</div>
+          <Card className="p-8 text-center flex items-center justify-center flex-col">
+            <Scroll className=" w-16 h-16 mx-auto mb-4 text-purple-600" />
             <p className="text-3xl font-bold">{tasks.length} заданий</p>
           </Card>
         </div>

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Star, Trophy, UserCheck } from "lucide-react";
+import {Plus, Sparkles, Star, Trophy, UserCheck} from "lucide-react";
 import AddChildDialog from "@/components/shared/parent/AddChildDialog";
 
 export default async function ParentDashboard() {
@@ -61,7 +61,7 @@ export default async function ParentDashboard() {
 
         {children.length === 0 ? (
           <Card className="p-16 text-center bg-white/80 backdrop-blur">
-            <div className="text-9xl mb-6">Sparkles</div>
+            <Sparkles/>
             <h3 className="text-3xl font-bold mb-4">Пока нет детей</h3>
             <p className="text-lg text-gray-600 mb-8">
               Добавь своего малыша и следи за его успехами!
